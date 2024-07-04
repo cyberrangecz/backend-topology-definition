@@ -30,6 +30,11 @@ class BaseBox(Object):
         default=Protocol.SSH,
     )
 
+    def __init__(self, image, mgmt_user='kypo-man', mgmt_protocol=Protocol.SSH):
+        self.image = image
+        self.mgmt_user = mgmt_user
+        self.mgmt_protocol = mgmt_protocol
+
     @classmethod
     def from_yaml(cls, loader, node, _rtd=None):
         rename_deprecated_attribute(node.value, 'man_user', 'mgmt_user')
@@ -45,6 +50,9 @@ class ExtraValues(Map):
 class Volume(Object):
     size = Attribute(type=int, default=None)
 
+    def __init__(self, size=None):
+        self.size = size
+
 
 class VolumeList(Sequence):
     item_type = Volume
@@ -56,15 +64,16 @@ class Host(Object):
     flavor = Attribute(type=str)
     block_internet = Attribute(type=bool, default=False)
     hidden = Attribute(type=bool, default=False)
-    extra = Attribute(type=ExtraValues, default=None)
     volumes = Attribute(type=VolumeList, default=None, validator=TopologyValidation.is_volumes_valid)
+    extra = Attribute(type=ExtraValues, default=None)
 
-    def __init__(self, name, base_box, flavor, block_internet, hidden, volumes):
+    def __init__(self, name, base_box, flavor, block_internet=False, hidden=False, volumes=None, extra=None):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
         self.block_internet = block_internet
         self.hidden = hidden
+        self.extra = extra
         self.volumes = volumes
 
 
@@ -79,10 +88,12 @@ class Router(Object):
     extra = Attribute(type=ExtraValues, default=None)
     hidden = Attribute(type=bool, default=False)
 
-    def __init__(self, name, base_box, flavor):
+    def __init__(self, name, base_box, flavor, hidden=False, extra=None):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
+        self.hidden = hidden
+        self.extra = extra
 
 
 class RouterList(Sequence):
@@ -95,7 +106,7 @@ class Network(Object):
     accessible_by_user = Attribute(type=bool, default=True)
     hidden = Attribute(type=bool, default=False)
 
-    def __init__(self, name, cidr, accessible_by_user, hidden):
+    def __init__(self, name, cidr, accessible_by_user=True, hidden=False):
         self.name = name
         self.cidr = cidr
         self.accessible_by_user = accessible_by_user
@@ -165,6 +176,10 @@ class Target(Object):
     interface = Attribute(type=str)
     port = Attribute(type=int)
 
+    def __init__(self, interface, port):
+        self.interface = interface
+        self.port = port
+
 
 class TargetList(Sequence):
     item_type = Target
@@ -173,6 +188,10 @@ class TargetList(Sequence):
 class MonitoringTarget(Object):
     node = Attribute(type=str)
     targets = Attribute(type=TargetList, validator=TopologyValidation.validate_targets)
+
+    def __init__(self, node, targets):
+        self.node = node
+        self.targets = targets
 
 
 class MonitoringTargetList(Sequence):
@@ -254,6 +273,11 @@ class Container(Object):
     image = Attribute(type=str, default="")
     dockerfile = Attribute(type=str, default="")
 
+    def __init__(self, name, image="", dockerfile=""):
+        self.name = name
+        self.image = image
+        self.dockerfile = dockerfile
+
 
 class ContainerList(Sequence):
     item_type = Container
@@ -264,6 +288,12 @@ class ContainerMapping(Object):
     host = Attribute(type=str)
     port = Attribute(type=int)
     hidden = Attribute(type=bool, default=False)
+
+    def __init__(self, container, host, port, hidden=False):
+        self.container = container
+        self.host = host
+        self.port = port
+        self.hidden = hidden
 
 
 class ContainerMappingList(Sequence):
@@ -278,3 +308,8 @@ class DockerContainers(Object):
     @staticmethod
     def from_file(file) -> 'DockerContainers':
         return DockerContainers.load(open(file, mode='r'))
+
+    def __init__(self, containers, container_mappings, hide_all=Fasle):
+        self.containers = containers
+        self.container_mappings = container_mappings
+        self.hide_all = hide_all
