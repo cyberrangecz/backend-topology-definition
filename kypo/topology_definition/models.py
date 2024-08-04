@@ -1,5 +1,6 @@
 from enum import Enum
 
+import yaml
 from yamlize import Sequence, Object, Attribute, Typed, StrList, Map, Dynamic, IntList
 
 from kypo.topology_definition.validators import TopologyValidation
@@ -231,6 +232,13 @@ class TopologyDefinition(Object):
     def from_file(file) -> 'TopologyDefinition':
         return TopologyDefinition.load(open(file, mode='r'))
 
+    @staticmethod
+    def from_string(topology_yaml) -> 'TopologyDefinition':
+        return TopologyDefinition.load(topology_yaml)
+
+    def to_yaml_string(self):
+        return self.dump(self)
+
     def index(self):
         self._hosts_index = {h.name: h for h in self.hosts}
         self._routers_index = {r.name: r for r in self.routers}
@@ -257,6 +265,9 @@ class TopologyDefinition(Object):
 
     def add_router(self, router):
         self.routers.append(router)
+
+    def add_network(self, network):
+        self.networks.append(network)
 
     def add_net_mapping(self, net_mapping):
         self.net_mappings.append(net_mapping)
@@ -309,7 +320,7 @@ class DockerContainers(Object):
     def from_file(file) -> 'DockerContainers':
         return DockerContainers.load(open(file, mode='r'))
 
-    def __init__(self, containers, container_mappings, hide_all=Fasle):
+    def __init__(self, containers, container_mappings, hide_all=False):
         self.containers = containers
         self.container_mappings = container_mappings
         self.hide_all = hide_all
