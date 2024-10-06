@@ -31,10 +31,11 @@ class BaseBox(Object):
         default=Protocol.SSH,
     )
 
-    def __init__(self, image, mgmt_user='kypo-man', mgmt_protocol=Protocol.SSH):
+    def __init__(self, image, mgmt_user='kypo-man', mgmt_protocol=None):
         self.image = image
         self.mgmt_user = mgmt_user
-        self.mgmt_protocol = mgmt_protocol
+        if mgmt_protocol:
+            self.mgmt_protocol = mgmt_protocol
 
     @classmethod
     def from_yaml(cls, loader, node, _rtd=None):
@@ -68,14 +69,16 @@ class Host(Object):
     volumes = Attribute(type=VolumeList, default=None, validator=TopologyValidation.is_volumes_valid)
     extra = Attribute(type=ExtraValues, default=None)
 
-    def __init__(self, name, base_box, flavor, block_internet=False, hidden=False, volumes=None, extra=None):
+    def __init__(self, name, base_box, flavor, hidden=False, volumes=None, extra=None):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
-        self.block_internet = block_internet
-        self.hidden = hidden
-        self.extra = extra
-        self.volumes = volumes
+        if hidden:
+            self.hidden = hidden
+        if volumes:
+            self.volumes = volumes
+        if extra:
+            self.extra = extra
 
 
 class HostList(Sequence):
@@ -89,12 +92,15 @@ class Router(Object):
     extra = Attribute(type=ExtraValues, default=None)
     hidden = Attribute(type=bool, default=False)
 
-    def __init__(self, name, base_box, flavor, hidden=False, extra=None):
+    def __init__(self, name, base_box, flavor, hidden=False):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
-        self.hidden = hidden
-        self.extra = extra
+        if hidden:
+            self.hidden = hidden
+
+    def to_yaml_string(self):
+        return self.dump(self)
 
 
 class RouterList(Sequence):
@@ -277,6 +283,23 @@ class TopologyDefinition(Object):
 
     def add_group(self, group):
         self.groups.append(group)
+
+    def get_used_ips(self, network: str):
+        used_ips = []
+        for mapping in self.net_mappings:
+            if mapping.network != network:
+                continue
+            used_ips.append(mapping.ip)
+
+        for router_map in self.router_mappings:
+            if router_map.network == network:
+                used_ips.append(router_map.ip)
+                break
+
+        return used_ips
+
+    def get_cidr(self, network: str):
+        return self.find_network_by_name(network).cidr
 
 
 class Container(Object):
