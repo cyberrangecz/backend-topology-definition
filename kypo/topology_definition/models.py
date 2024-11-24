@@ -1,5 +1,6 @@
 from enum import Enum
 
+import yaml
 from yamlize import Sequence, Object, Attribute, Typed, StrList, Map, Dynamic, IntList
 
 from kypo.topology_definition.validators import TopologyValidation
@@ -30,6 +31,12 @@ class BaseBox(Object):
         default=Protocol.SSH,
     )
 
+    def __init__(self, image, mgmt_user='kypo-man', mgmt_protocol=None):
+        self.image = image
+        self.mgmt_user = mgmt_user
+        if mgmt_protocol:
+            self.mgmt_protocol = mgmt_protocol
+
     @classmethod
     def from_yaml(cls, loader, node, _rtd=None):
         rename_deprecated_attribute(node.value, 'man_user', 'mgmt_user')
@@ -45,6 +52,9 @@ class ExtraValues(Map):
 class Volume(Object):
     size = Attribute(type=int, default=None)
 
+    def __init__(self, size=None):
+        self.size = size
+
 
 class VolumeList(Sequence):
     item_type = Volume
@@ -56,16 +66,19 @@ class Host(Object):
     flavor = Attribute(type=str)
     block_internet = Attribute(type=bool, default=False)
     hidden = Attribute(type=bool, default=False)
-    extra = Attribute(type=ExtraValues, default=None)
     volumes = Attribute(type=VolumeList, default=None, validator=TopologyValidation.is_volumes_valid)
+    extra = Attribute(type=ExtraValues, default=None)
 
-    def __init__(self, name, base_box, flavor, block_internet, hidden, volumes):
+    def __init__(self, name, base_box, flavor, hidden=False, volumes=None, extra=None):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
-        self.block_internet = block_internet
-        self.hidden = hidden
-        self.volumes = volumes
+        if hidden:
+            self.hidden = hidden
+        if volumes:
+            self.volumes = volumes
+        if extra:
+            self.extra = extra
 
 
 class HostList(Sequence):
@@ -79,10 +92,15 @@ class Router(Object):
     extra = Attribute(type=ExtraValues, default=None)
     hidden = Attribute(type=bool, default=False)
 
-    def __init__(self, name, base_box, flavor):
+    def __init__(self, name, base_box, flavor, hidden=False):
         self.name = name
         self.base_box = base_box
         self.flavor = flavor
+        if hidden:
+            self.hidden = hidden
+
+    def to_yaml_string(self):
+        return self.dump(self)
 
 
 class RouterList(Sequence):
@@ -95,7 +113,7 @@ class Network(Object):
     accessible_by_user = Attribute(type=bool, default=True)
     hidden = Attribute(type=bool, default=False)
 
-    def __init__(self, name, cidr, accessible_by_user, hidden):
+    def __init__(self, name, cidr, accessible_by_user=True, hidden=False):
         self.name = name
         self.cidr = cidr
         self.accessible_by_user = accessible_by_user
@@ -165,6 +183,10 @@ class Target(Object):
     interface = Attribute(type=str)
     port = Attribute(type=int)
 
+    def __init__(self, interface, port):
+        self.interface = interface
+        self.port = port
+
 
 class TargetList(Sequence):
     item_type = Target
@@ -173,6 +195,10 @@ class TargetList(Sequence):
 class MonitoringTarget(Object):
     node = Attribute(type=str)
     targets = Attribute(type=TargetList, validator=TopologyValidation.validate_targets)
+
+    def __init__(self, node, targets):
+        self.node = node
+        self.targets = targets
 
 
 class MonitoringTargetList(Sequence):
@@ -212,6 +238,13 @@ class TopologyDefinition(Object):
     def from_file(file) -> 'TopologyDefinition':
         return TopologyDefinition.load(open(file, mode='r'))
 
+    @staticmethod
+    def from_string(topology_yaml) -> 'TopologyDefinition':
+        return TopologyDefinition.load(topology_yaml)
+
+    def to_yaml_string(self):
+        return self.dump(self)
+
     def index(self):
         self._hosts_index = {h.name: h for h in self.hosts}
         self._routers_index = {r.name: r for r in self.routers}
@@ -239,6 +272,9 @@ class TopologyDefinition(Object):
     def add_router(self, router):
         self.routers.append(router)
 
+    def add_network(self, network):
+        self.networks.append(network)
+
     def add_net_mapping(self, net_mapping):
         self.net_mappings.append(net_mapping)
 
@@ -248,11 +284,33 @@ class TopologyDefinition(Object):
     def add_group(self, group):
         self.groups.append(group)
 
+    def get_used_ips(self, network: str):
+        used_ips = []
+        for mapping in self.net_mappings:
+            if mapping.network != network:
+                continue
+            used_ips.append(mapping.ip)
+
+        for router_map in self.router_mappings:
+            if router_map.network == network:
+                used_ips.append(router_map.ip)
+                break
+
+        return used_ips
+
+    def get_cidr(self, network: str):
+        return self.find_network_by_name(network).cidr
+
 
 class Container(Object):
     name = Attribute(type=str)
     image = Attribute(type=str, default="")
     dockerfile = Attribute(type=str, default="")
+
+    def __init__(self, name, image="", dockerfile=""):
+        self.name = name
+        self.image = image
+        self.dockerfile = dockerfile
 
 
 class ContainerList(Sequence):
@@ -264,6 +322,12 @@ class ContainerMapping(Object):
     host = Attribute(type=str)
     port = Attribute(type=int)
     hidden = Attribute(type=bool, default=False)
+
+    def __init__(self, container, host, port, hidden=False):
+        self.container = container
+        self.host = host
+        self.port = port
+        self.hidden = hidden
 
 
 class ContainerMappingList(Sequence):
@@ -278,3 +342,8 @@ class DockerContainers(Object):
     @staticmethod
     def from_file(file) -> 'DockerContainers':
         return DockerContainers.load(open(file, mode='r'))
+
+    def __init__(self, containers, container_mappings, hide_all=False):
+        self.containers = containers
+        self.container_mappings = container_mappings
+        self.hide_all = hide_all
