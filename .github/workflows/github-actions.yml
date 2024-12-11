@@ -12,13 +12,14 @@ on:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
     env:
       VERSION: ${{ vars.VERSION }}
       PYTHON_TAG: py3
       ABI_TAG: none
       PLATFORM_TAG: any
       PACKAGE_EXTENSION: whl
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
