@@ -1,0 +1,57 @@
+name: Python commons CI
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    env:
+      VERSION: ${{ vars.VERSION }}
+      PYTHON_TAG: py3
+      ABI_TAG: none
+      PLATFORM_TAG: any
+      PACKAGE_EXTENSION: whl
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Python Version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install Dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install setuptools wheel
+
+      - name: Set Package Version
+        run: python3 setup.py setopt --command=metadata --option=version --set-value=$VERSION
+
+      - name: Build Wheel Package
+        run: |
+          export WHEEL_NAME=$(python3 setup.py --name | tr '-' '_')
+          export PACKAGE=$WHEEL_NAME-$VERSION-${PYTHON_TAG}-${ABI_TAG}-${PLATFORM_TAG}.${PACKAGE_EXTENSION}
+          python3 setup.py bdist_wheel
+
+      - name: Save Package Name
+        run: echo "${{ env.PACKAGE }}" > dist/.package-name
+
+      - name: Upload pckage as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-commons
+          path: dist/
+
+  create_tag:
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_template.yml@master
+    with:
+      VERSION: ${{ vars.VERSION }}
