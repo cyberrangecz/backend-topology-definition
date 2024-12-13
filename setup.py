@@ -12,8 +12,8 @@ def read(filename):
 
 
 setup(
-    name='kypo-topology-definition',
-    author='KYPO Team',
+    name='topology-definition',
+    author='cyberrangecz',
     description='',
     long_description=read('README.md'),
     packages=find_namespace_packages(include=['kypo.*'], exclude=['tests']),

@@ -32,7 +32,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install setuptools wheel
+          pip install setuptools wheel twine
 
       - name: Set Package Version
         run: python3 setup.py setopt --command=metadata --option=version --set-value=$VERSION
@@ -43,14 +43,12 @@ jobs:
           export PACKAGE=$WHEEL_NAME-$VERSION-${PYTHON_TAG}-${ABI_TAG}-${PLATFORM_TAG}.${PACKAGE_EXTENSION}
           python3 setup.py bdist_wheel
 
-      - name: Save Package Name
-        run: echo "${{ env.PACKAGE }}" > dist/.package-name
-
-      - name: Upload pckage as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: topology-definition
-          path: dist/
+      - name: Publish to Pypi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          python -m twine upload dist/*
 
   create_tag:
     uses: cyberrangecz/actions-templates/.github/workflows/tag_template.yml@master
