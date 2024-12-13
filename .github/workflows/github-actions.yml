@@ -1,4 +1,4 @@
-name: Python commons CI
+name: Topology definition CI
 
 on:
   push:
