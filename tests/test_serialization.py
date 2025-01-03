@@ -5,8 +5,8 @@ import pytest
 from ruamel.yaml import YAML
 from yamlize.yamlizing_error import YamlizingError
 
-from kypo.topology_definition.models import TopologyDefinition, Protocol, BaseBox, Host, Router
-from kypo.topology_definition.image_naming import image_name_replace, image_name_strip
+from cyberrangecz.topology_definition.models import TopologyDefinition, Protocol, BaseBox, Host, Router
+from cyberrangecz.topology_definition.image_naming import image_name_replace, image_name_strip
 
 SANDBOX_DEFINITION_PATH = os.path.join(os.path.dirname(__file__), 'assets/topology.yml')
 SANDBOX_DEFINITION_MONITORING_PATH = os.path.join(os.path.dirname(__file__), 'assets/topology-with-monitoring.yml')
