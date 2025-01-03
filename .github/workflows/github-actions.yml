@@ -24,7 +24,7 @@ jobs:
       - name: Set Python Version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.6'
+          python-version: '3.8'
 
       - name: install packages
         run: pip3 install pipenv
@@ -37,6 +37,7 @@ jobs:
   build:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    needs: unitTests
     env:
       VERSION: ${{ vars.VERSION }}
       PYTHON_TAG: py3
@@ -50,7 +51,7 @@ jobs:
       - name: Set Python Version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.6'
+          python-version: '3.8'
 
       - name: Install Dependencies
         run: |
