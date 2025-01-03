@@ -5,7 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 # tox
-tox = "~=3.7.0"
+tox = ">=4"
 tox-pipenv = "~=1.9.0"
 # pytest
 pytest = "*"
