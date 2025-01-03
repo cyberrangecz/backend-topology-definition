@@ -12,12 +12,12 @@ def read(filename):
 
 
 setup(
-    name='topology-definition',
-    author='cyberrangecz',
+    name='cyberrangecz-topology-definition',
+    author='cybersecurityhub.cz',
     description='topology-definition',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
-    packages=find_namespace_packages(include=['kypo.*'], exclude=['tests']),
+    packages=find_namespace_packages(include=['cyberrangecz.*'], exclude=['tests']),
     install_requires=[
         'yamlize>=0.6',
         'structlog>=19.2',
