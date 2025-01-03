@@ -11,6 +11,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  unitTests:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Python Version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: install packages
+        run: pip3 install pipenv
+
+      - name: run pipenv
+        run: |
+          pipenv sync --dev
+          pipenv run python -V
+          pipenv run tox
   build:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
