@@ -6,7 +6,6 @@ verify_ssl = true
 [dev-packages]
 # tox
 tox = ">=4"
-tox-pipenv = "~=1.9.0"
 # pytest
 pytest = "*"
 pytest-mock = "*"
@@ -18,4 +17,4 @@ structlog = ">=19.2"
 netaddr = ">=0.7"
 
 [requires]
-python_version = "3.8"
+python_version = "3.12"
