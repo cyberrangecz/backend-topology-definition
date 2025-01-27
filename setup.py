@@ -12,12 +12,12 @@ def read(filename):
 
 
 setup(
-    name='cyberrangecz-topology-definition',
+    name='crczp-topology-definition',
     author='cybersecurityhub.cz',
     description='topology-definition',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
-    packages=find_namespace_packages(include=['cyberrangecz.*'], exclude=['tests']),
+    packages=find_namespace_packages(include=['crczp.*'], exclude=['tests']),
     install_requires=[
         'yamlize>=0.6',
         'structlog>=19.2',
