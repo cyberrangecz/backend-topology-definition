@@ -2,8 +2,8 @@ from enum import Enum
 
 from yamlize import Sequence, Object, Attribute, Typed, StrList, Map, Dynamic, IntList
 
-from cyberrangecz.topology_definition.validators import TopologyValidation
-from cyberrangecz.topology_definition.utils import rename_deprecated_attribute
+from crczp.topology_definition.validators import TopologyValidation
+from crczp.topology_definition.utils import rename_deprecated_attribute
 
 
 class Protocol(Enum):
