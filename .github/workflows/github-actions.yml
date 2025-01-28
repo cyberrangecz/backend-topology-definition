@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [get_current_version, unitTests]
     env:
-      VERSION: ${{ needs.get_current_version.get_version.outputs.version }}
+      VERSION: ${{ needs.get_current_version.outputs.version }}
       PYTHON_TAG: py3
       ABI_TAG: none
       PLATFORM_TAG: any
