@@ -2,9 +2,8 @@ name: Topology definition CI
 
 on:
   push:
-    branches:
+    branches-ignore:
       - master
-      - develop
   pull_request:
     branches:
       - master
@@ -87,7 +86,7 @@ jobs:
           python -m twine upload dist/*
 
   create_tag:
-    if: github.event.pull_request.base.ref == 'master' && ${{ github.event.inputs.confirm_action }} == 'yes'
+    if: github.event.pull_request.base.ref == 'master' || ( github.ref == 'refs/heads/master' && ${{ github.event.inputs.confirm_action }} == 'yes' )
     needs: get_current_version
     uses: cyberrangecz/actions-templates/.github/workflows/tag_template.yml@master
     with:
