@@ -78,7 +78,7 @@ jobs:
           python3 setup.py bdist_wheel
 
       - name: Publish to Pypi
-        if: github.ref == 'refs/heads/master' && github.event.inputs.confirm_action == 'yes'
+        if: github.ref == 'refs/heads/master' && github.event.inputs.confirm_action == 'yes' && needs.control_tag.result == 'success'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
