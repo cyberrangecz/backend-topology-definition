@@ -85,9 +85,18 @@ jobs:
         run: |
           python -m twine upload dist/*
 
-  create_tag:
-    if: github.event.pull_request.base.ref == 'master' || ( github.ref == 'refs/heads/master' && github.event.inputs.confirm_action == 'yes' )
+  # Controls if version consistent with semver and higner than last git tag.
+  control_tag:
+    if: github.event.pull_request.base.ref == 'master' || github.ref == 'refs/heads/master'
     needs: get_current_version
-    uses: cyberrangecz/actions-templates/.github/workflows/tag_template.yml@master
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_control_template.yml@master
+    with:
+      VERSION: ${{ needs.get_current_version.outputs.version }}
+
+  # Push tag only from manual workflow_dispatch with confirmed tag creation
+  push_tag:
+    if: github.ref == 'refs/heads/master' && github.event.inputs.confirm_action == 'yes'
+    needs: [ get_current_version, control_tag ]
+    uses: cyberrangecz/actions-templates/.github/workflows/tag_push_template.yml@master
     with:
       VERSION: ${{ needs.get_current_version.outputs.version }}
