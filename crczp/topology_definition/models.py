@@ -423,6 +423,51 @@ class Vpn(Object):  # type: ignore[misc]
     dns = Attribute(type=VpnDns, default=None)
 
 
+class ForwardingInterface(Object):  # type: ignore[misc]
+    """
+    A single interface in a network-forwarding rule, identified by a host and the
+    network it is attached to. Maps 1:1 to a Neutron port / AWS network interface.
+    """
+
+    host = Attribute(type=str)
+    network = Attribute(type=str)
+
+    def __init__(self, host: str, network: str) -> None:
+        self.host = host
+        self.network = network
+
+
+class ForwardingInterfaceList(Sequence):  # type: ignore[misc]
+    """
+    List of forwarding interfaces.
+    """
+
+    item_type = ForwardingInterface
+
+
+class NetworkForwardingRule(Object):  # type: ignore[misc]
+    """
+    Network traffic forwarding (port mirroring) rule. A copy of the traffic on one
+    or more source interfaces is delivered to a single destination interface.
+
+    A topology declares at most one rule, so the resources it renders are named after
+    the sandbox prefix alone and need no name of their own.
+
+    ``direction`` selects which traffic is mirrored relative to the source
+    (``in``/``out``/``both``).
+
+    A source may be a host or a router. The destination has to be a host and a
+    dedicated interface: its host needs at least two interfaces in ``net_mappings``,
+    and the first one, which the host routes through, cannot be used. The mirror
+    destination is reachable only from the hypervisors, so a host mirroring to its
+    default-routing interface would lose the rest of the sandbox.
+    """
+
+    sources = Attribute(type=ForwardingInterfaceList)
+    destination = Attribute(type=ForwardingInterface)
+    direction = Attribute(type=str, default='both')
+
+
 class TopologyDefinition(Object):  # type: ignore[misc]  # pylint: disable=too-many-instance-attributes
     """
     Topology definition.
@@ -452,6 +497,11 @@ class TopologyDefinition(Object):  # type: ignore[misc]  # pylint: disable=too-m
         validator=TopologyValidation.validate_vpn,
         default=None,
     )
+    network_forwarding = Attribute(
+        type=NetworkForwardingRule,
+        validator=TopologyValidation.validate_network_forwarding,
+        default=None,
+    )
 
     # Class-level defaults so yamlize (which bypasses __init__) finds these attributes
     _indexed: bool = False
@@ -470,6 +520,7 @@ class TopologyDefinition(Object):  # type: ignore[misc]  # pylint: disable=too-m
         self.groups = GroupList()
         self.monitoring_targets = None
         self.vpn = None
+        self.network_forwarding = None
         self._indexed: bool = False
         self._hosts_index: dict[str, Host] = {}
         self._routers_index: dict[str, Router] = {}
