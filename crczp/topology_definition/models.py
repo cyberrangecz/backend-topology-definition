@@ -78,6 +78,7 @@ class Volume(Object):  # type: ignore[misc]
     """
 
     size = Attribute(type=int, default=None)
+    image = Attribute(type=str, default=None)
 
 
 class VolumeList(Sequence):  # type: ignore[misc]
